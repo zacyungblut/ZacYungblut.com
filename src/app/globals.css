@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-paper: #faf7f0;
+  --color-ink: #2a2a24;
+  --color-ink-soft: #6b6b60;
+  --color-orange: #ff6a13;
+  --color-orange-deep: #d9480f;
+  --color-forest: #3a4a32;
+  --color-tan: #c9b896;
+  --font-display: var(--font-anton);
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+.emboss {
+  color: var(--color-ink);
+  text-shadow:
+    -1px -1px 1px rgba(0, 0, 0, 0.12),
+    1px 1px 1px rgba(255, 255, 255, 0.75);
+}
