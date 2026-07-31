@@ -15,9 +15,7 @@ export function Wordmark({ className }: { className?: string }) {
         fontSize="64"
         letterSpacing="4"
       >
-        <tspan fill="#d8cdb4" stroke="#6b5a3d" strokeWidth="2.5" strokeDasharray="5 4.5" strokeLinecap="round">
-          ZAC YUNGBLUT
-        </tspan>
+        <tspan fill="#d8cdb4">ZAC YUNGBLUT</tspan>
       </text>
       <text
         x="50%"
@@ -28,7 +26,7 @@ export function Wordmark({ className }: { className?: string }) {
         fontSize="64"
         letterSpacing="4"
         fill="url(#camoFill)"
-        opacity="0.55"
+        opacity="1"
       >
         ZAC YUNGBLUT
       </text>
