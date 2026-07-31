@@ -16,13 +16,13 @@ export function Hero() {
       </div>
 
       <h1 className="emboss font-display mt-10 text-[40px] leading-[0.95] uppercase sm:text-[48px]">
-        Listen to his
+        Download the
         <br />
-        unreleased music.
+        Zac Yungblut App
       </h1>
 
       <p className="text-ink-soft mt-5 text-[15px] leading-relaxed">
-        Get the Zac Yungblut app to listen to unreleased music, the most played song gets released next.
+        Get the Zac Yungblut app to listen to unreleased music. The most played songs get released next.
       </p>
 
       <a
