@@ -14,9 +14,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Zac Yungblut — Indie Folk",
+  title: "Zac Yungblut",
   description:
-    "Zac Yungblut — indie folk. Get the app to hear unreleased songs first. The most-streamed track becomes the next single on Spotify and Apple Music.",
+    "Zac Yungblut is an indie folk artist. Get the app to hear unreleased songs first.",
 };
 
 export default function RootLayout({
