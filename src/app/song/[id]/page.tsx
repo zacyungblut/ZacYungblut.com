@@ -81,8 +81,8 @@ export default async function SongPage({
 
           <p className="text-ink-soft mt-5 text-[15px] leading-relaxed">
             {isReleased
-              ? "This one's already out — stream it below, or get the app to help decide what drops next."
-              : "This one hasn't dropped yet. Get the Zac Yungblut app to hear it — the most played unreleased songs get released next."}
+              ? "Stream this song on Apple Music and Spotify using the links below, or get the app to help decide what drops next."
+              : "This song hasn't dropped yet. Get the Zac Yungblut Underground app to hear it."}
           </p>
 
           <a
