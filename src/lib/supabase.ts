@@ -3,7 +3,14 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+// Falls back to a harmless placeholder so importing this module never
+// throws — createClient() validates its arguments synchronously, and
+// without this a missing env var on the host would fail the whole build,
+// not just this page.
+export const supabase = createClient(
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseAnonKey || "placeholder-anon-key"
+);
 
 export type SongPublic = {
   id: string;
