@@ -21,11 +21,6 @@ export function SongGrid({ songs }: { songs: FeedSong[] }) {
             ) : (
               <div className="aspect-square w-full" />
             )}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-9 w-9 text-[#F3ECDD]">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </div>
           </div>
           <p className="mt-2 truncate text-sm font-semibold text-[#F3ECDD]" style={{ maxWidth: "100%" }}>
             {song.title}

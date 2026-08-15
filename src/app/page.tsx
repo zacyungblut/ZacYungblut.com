@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CamoText } from "@/components/CamoText";
+import { ShuffleButton } from "@/components/ShuffleButton";
 import { SongGrid } from "@/components/SongGrid";
 import { getFeedSongs } from "@/lib/supabase";
 
@@ -19,13 +20,16 @@ export default async function Home() {
     <main className="min-h-screen bg-[#11130F] pb-28">
       <div className="mx-auto max-w-2xl px-5 pt-14">
         <div className="mb-8">
-          <CamoText as="h1" className="font-display text-4xl uppercase">
-            Zac Yungblut
-          </CamoText>
-          <p className="mt-1 text-xs font-bold tracking-[0.2em] text-[#FF9100]">UNDERGROUND</p>
-          <p className="mt-3 text-sm leading-relaxed text-[#B9B6A6]">
-            Some of Zac&apos;s unreleased songs
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CamoText as="h1" className="font-display text-4xl uppercase">
+                Zac Yungblut
+              </CamoText>
+              <p className="mt-1 text-xs font-bold tracking-[0.2em] text-[#FF9100]">UNDERGROUND</p>
+            </div>
+            {songs.length > 0 ? <ShuffleButton songs={songs} /> : null}
+          </div>
+          <p className="mt-3 text-sm leading-relaxed text-[#B9B6A6]">Some of Zac&apos;s unreleased songs</p>
         </div>
 
         {songs.length > 0 ? (
@@ -42,9 +46,9 @@ export default async function Home() {
         <a href="/privacy" className="transition-colors hover:text-[#B9B6A6]">
           Privacy Policy
         </a>
-        <a href="/app" className="transition-colors hover:text-[#B9B6A6]">
+        {/* <a href="/app" className="transition-colors hover:text-[#B9B6A6]">
           The App
-        </a>
+        </a> */}
       </footer>
     </main>
   );

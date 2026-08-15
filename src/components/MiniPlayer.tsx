@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PlayPauseIcon, SkipIcon } from "@/components/icons";
+import { CamoPlayPauseIcon, CamoSkipIcon } from "@/components/icons";
 import { usePlayer } from "@/lib/player-context";
 
 /** Persists across navigation so playback keeps going (and stays visible)
@@ -45,9 +45,9 @@ export function MiniPlayer() {
               restart();
             }}
             aria-label="Restart"
-            className="flex h-8 w-8 items-center justify-center text-[#B9B6A6]"
+            className="flex h-8 w-8 items-center justify-center"
           >
-            <SkipIcon direction="back" className="h-4 w-4" />
+            <CamoSkipIcon direction="back" size={20} />
           </button>
           <button
             onClick={(e) => {
@@ -56,9 +56,9 @@ export function MiniPlayer() {
               togglePlayPause();
             }}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#F3ECDD]"
+            className="flex h-10 w-10 items-center justify-center"
           >
-            <PlayPauseIcon playing={isPlaying} className="h-5 w-5" />
+            <CamoPlayPauseIcon playing={isPlaying} size={32} />
           </button>
           <button
             onClick={(e) => {
@@ -68,9 +68,9 @@ export function MiniPlayer() {
             }}
             disabled={!hasNext}
             aria-label="Skip"
-            className="flex h-8 w-8 items-center justify-center text-[#B9B6A6] disabled:opacity-30"
+            className="flex h-8 w-8 items-center justify-center disabled:opacity-30"
           >
-            <SkipIcon direction="forward" className="h-4 w-4" />
+            <CamoSkipIcon direction="forward" size={20} />
           </button>
         </div>
       </div>

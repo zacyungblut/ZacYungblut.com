@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CamoText } from "@/components/CamoText";
-import { CamoPlayPauseIcon, SkipIcon } from "@/components/icons";
+import { CamoPlayPauseIcon, CamoSkipIcon } from "@/components/icons";
 import { activeLyricIndex } from "@/lib/lyrics";
 import { APPLE_MUSIC_URL, SPOTIFY_URL } from "@/lib/links";
 import { usePlayer } from "@/lib/player-context";
@@ -115,29 +115,15 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
         </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-center gap-7">
-        <button
-          onClick={restart}
-          disabled={!isCurrent}
-          aria-label="Restart"
-          className="text-[#B9B6A6] transition-colors hover:text-[#F3ECDD] disabled:opacity-30 disabled:hover:text-[#B9B6A6]"
-        >
-          <SkipIcon direction="back" className="h-6 w-6" />
+      <div className="mt-6 flex items-center justify-center gap-8">
+        <button onClick={restart} disabled={!isCurrent} aria-label="Restart" className="disabled:opacity-30">
+          <CamoSkipIcon direction="back" size={26} />
         </button>
-        <button
-          onClick={handlePlayPause}
-          aria-label={isCurrent && isPlaying ? "Pause" : "Play"}
-          className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#F3ECDD]"
-        >
-          <CamoPlayPauseIcon playing={isCurrent && isPlaying} size={30} />
+        <button onClick={handlePlayPause} aria-label={isCurrent && isPlaying ? "Pause" : "Play"}>
+          <CamoPlayPauseIcon playing={isCurrent && isPlaying} size={64} />
         </button>
-        <button
-          onClick={skip}
-          disabled={!isCurrent || !hasNext}
-          aria-label="Skip"
-          className="text-[#B9B6A6] transition-colors hover:text-[#F3ECDD] disabled:opacity-30 disabled:hover:text-[#B9B6A6]"
-        >
-          <SkipIcon direction="forward" className="h-6 w-6" />
+        <button onClick={skip} disabled={!isCurrent || !hasNext} aria-label="Skip" className="disabled:opacity-30">
+          <CamoSkipIcon direction="forward" size={26} />
         </button>
       </div>
 
