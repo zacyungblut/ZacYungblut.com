@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Anton, Inter } from "next/font/google";
+import { MiniPlayer } from "@/components/MiniPlayer";
+import { PlayerProvider } from "@/lib/player-context";
 import "./globals.css";
 
 const anton = Anton({
@@ -26,7 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${anton.variable} ${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <PlayerProvider>
+          {children}
+          <MiniPlayer />
+        </PlayerProvider>
+      </body>
     </html>
   );
 }

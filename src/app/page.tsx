@@ -16,7 +16,7 @@ export default async function Home() {
   const songs = await getFeedSongs();
 
   return (
-    <main className="min-h-screen bg-[#11130F] pb-16">
+    <main className="min-h-screen bg-[#11130F] pb-28">
       <div className="mx-auto max-w-2xl px-5 pt-14">
         <div className="mb-8">
           <CamoText as="h1" className="font-display text-4xl uppercase">
@@ -24,7 +24,7 @@ export default async function Home() {
           </CamoText>
           <p className="mt-1 text-xs font-bold tracking-[0.2em] text-[#FF9100]">UNDERGROUND</p>
           <p className="mt-3 text-sm leading-relaxed text-[#B9B6A6]">
-            Unreleased songs, straight from the artist. Listen below — the most played gets released next.
+            Some of Zac&apos;s unreleased songs
           </p>
         </div>
 
