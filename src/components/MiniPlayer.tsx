@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PlayPauseIcon } from "@/components/icons";
+import { PlayPauseIcon, SkipIcon } from "@/components/icons";
 import { usePlayer } from "@/lib/player-context";
 
 /** Persists across navigation so playback keeps going (and stays visible)
@@ -12,7 +12,7 @@ import { usePlayer } from "@/lib/player-context";
  * page since its full "Now Playing" controls are already on screen there. */
 export function MiniPlayer() {
   const pathname = usePathname();
-  const { currentSong, isPlaying, currentTime, duration, togglePlayPause } = usePlayer();
+  const { currentSong, isPlaying, currentTime, duration, hasNext, togglePlayPause, restart, skip } = usePlayer();
 
   if (!currentSong) return null;
   if (pathname === `/song/${currentSong.id}`) return null;
@@ -37,17 +37,42 @@ export function MiniPlayer() {
           <p className="truncate text-sm font-semibold text-[#F3ECDD]">{currentSong.title}</p>
           <p className="truncate text-xs text-[#B9B6A6]">{currentSong.artist}</p>
         </div>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            togglePlayPause();
-          }}
-          aria-label={isPlaying ? "Pause" : "Play"}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#F3ECDD]"
-        >
-          <PlayPauseIcon playing={isPlaying} className="h-5 w-5" />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              restart();
+            }}
+            aria-label="Restart"
+            className="flex h-8 w-8 items-center justify-center text-[#B9B6A6]"
+          >
+            <SkipIcon direction="back" className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              togglePlayPause();
+            }}
+            aria-label={isPlaying ? "Pause" : "Play"}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#F3ECDD]"
+          >
+            <PlayPauseIcon playing={isPlaying} className="h-5 w-5" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              skip();
+            }}
+            disabled={!hasNext}
+            aria-label="Skip"
+            className="flex h-8 w-8 items-center justify-center text-[#B9B6A6] disabled:opacity-30"
+          >
+            <SkipIcon direction="forward" className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </Link>
   );

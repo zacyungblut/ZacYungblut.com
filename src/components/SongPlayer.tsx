@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CamoText } from "@/components/CamoText";
@@ -20,21 +19,37 @@ function formatDuration(seconds: number): string {
 /** The song detail page's "Now Playing" view — cover, title, artist,
  * transport controls, and time-synced lyrics. Reads/drives the *global*
  * player (not local state) so playback survives navigating away — e.g. the
- * back chevron to the feed — and skipping forward moves the whole page to
- * the next song, same as the app's detail screen. */
+ * back chevron to the feed. Landing on this page never changes what's
+ * playing on its own; it only shows this song, ready to go, until the fan
+ * presses play (or a lyric), same as the app never interrupts playback just
+ * because a different song's screen was opened. */
 export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initialSongId: string }) {
   const { currentSong, isPlaying, currentTime, duration, hasNext, playSong, togglePlayPause, restart, skip, seekTo } =
     usePlayer();
 
-  useEffect(() => {
-    playSong(queue, initialSongId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSongId]);
-
-  // Falls back to this page's own server-fetched song for the first paint,
-  // before the effect above has told the global player to pick it up.
-  const song = currentSong ?? queue.find((s) => s.id === initialSongId) ?? queue[0];
+  // Always this page's own song — not whatever else happens to be playing
+  // globally. The mini player elsewhere reflects that; this page reflects
+  // what it was navigated to.
+  const song = queue.find((s) => s.id === initialSongId) ?? queue[0];
   const isCurrent = currentSong?.id === song.id;
+
+  function handlePlayPause() {
+    if (isCurrent) {
+      togglePlayPause();
+    } else {
+      playSong(queue, song.id);
+    }
+  }
+
+  function handleLyricClick(t: number) {
+    if (isCurrent) {
+      seekTo(t);
+    } else {
+      // Not already playing this song — start it (same queue-from-here
+      // behavior as pressing play), then jump straight to this line.
+      playSong(queue, song.id, t);
+    }
+  }
 
   function handleSeek(e: React.MouseEvent<HTMLDivElement>) {
     if (!isCurrent || duration <= 0) return;
@@ -64,8 +79,8 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
       </div>
 
       <button
-        onClick={togglePlayPause}
-        aria-label={isPlaying ? "Pause" : "Play"}
+        onClick={handlePlayPause}
+        aria-label={isCurrent && isPlaying ? "Pause" : "Play"}
         className="group relative mx-auto block w-56 overflow-hidden rounded-3xl bg-[#3A4A32] shadow-[0_8px_30px_rgba(0,0,0,0.5)] sm:w-64"
       >
         {song.cover_url ? (
@@ -80,11 +95,6 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
         ) : (
           <div className="aspect-square w-full" />
         )}
-        <div className="absolute right-2 top-2 rounded-full bg-[#FF9100] px-2 py-0.5">
-          <span className="text-[9px] font-bold uppercase tracking-wide text-white">
-            {isReleased ? "Out now" : "Unreleased"}
-          </span>
-        </div>
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
           <CamoPlayPauseIcon playing={isCurrent && isPlaying} size={44} />
         </div>
@@ -106,12 +116,17 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
       </div>
 
       <div className="mt-5 flex items-center justify-center gap-7">
-        <button onClick={restart} aria-label="Restart" className="text-[#B9B6A6] transition-colors hover:text-[#F3ECDD]">
+        <button
+          onClick={restart}
+          disabled={!isCurrent}
+          aria-label="Restart"
+          className="text-[#B9B6A6] transition-colors hover:text-[#F3ECDD] disabled:opacity-30 disabled:hover:text-[#B9B6A6]"
+        >
           <SkipIcon direction="back" className="h-6 w-6" />
         </button>
         <button
-          onClick={togglePlayPause}
-          aria-label={isPlaying ? "Pause" : "Play"}
+          onClick={handlePlayPause}
+          aria-label={isCurrent && isPlaying ? "Pause" : "Play"}
           className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#F3ECDD]"
         >
           <CamoPlayPauseIcon playing={isCurrent && isPlaying} size={30} />
@@ -147,7 +162,7 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
           {song.lyrics.map((line, i) => (
             <button
               key={i}
-              onClick={() => seekTo(line.t)}
+              onClick={() => handleLyricClick(line.t)}
               className={`block w-full py-1.5 text-left text-lg font-extrabold transition-colors ${
                 i === activeLine ? "text-[#FF9100]" : "text-[#82806F] hover:text-[#B9B6A6]"
               }`}

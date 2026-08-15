@@ -36,6 +36,18 @@ export async function getSong(id: string): Promise<FeedSong | null> {
   return data;
 }
 
+/** Every song regardless of release status — used to look up titles for
+ * historical plays on the /stats page, including songs that have since been
+ * released and dropped off the active Feed. */
+export async function getAllSongsForLookup(): Promise<FeedSong[]> {
+  const { data, error } = await supabase.from("songs_feed_public").select("*");
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return data ?? [];
+}
+
 /** The active (not-yet-released) catalog, in release-queue order — the
  * website's Feed. Retired songs are already out on Spotify/Apple, so they're
  * left off this list the same way they're left off the app's Feed tab. */
