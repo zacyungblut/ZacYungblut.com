@@ -36,7 +36,7 @@ export default async function Home() {
         </div>
 
         {songs.length > 0 ? (
-          <FeedPlayer songs={songs} />
+          <FeedPlayer songs={songs} linkToDetail />
         ) : (
           <p className="text-sm text-[#82806F]">Nothing in the queue right now — check back soon.</p>
         )}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { FeedSong } from "@/lib/supabase";
 
 function formatDuration(seconds: number): string {
@@ -11,15 +12,34 @@ function formatDuration(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export function FeedPlayer({ songs, autoPlaySongId }: { songs: FeedSong[]; autoPlaySongId?: string }) {
+export function FeedPlayer({
+  songs,
+  queue,
+  autoPlaySongId,
+  linkToDetail,
+}: {
+  /** Tiles rendered in the grid. */
+  songs: FeedSong[];
+  /** What the skip button advances through — defaults to `songs`. Lets a
+   * song's detail page show just that one tile while still skipping forward
+   * into the rest of the catalog, same as the app's "song plus whatever
+   * comes after it" queue. */
+  queue?: FeedSong[];
+  autoPlaySongId?: string;
+  /** Tapping a tile opens its detail page instead of playing inline — used
+   * by the homepage grid. */
+  linkToDetail?: boolean;
+}) {
+  const playQueue = queue ?? songs;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(autoPlaySongId ?? null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const currentIndex = useMemo(() => songs.findIndex((s) => s.id === currentId), [songs, currentId]);
-  const currentSong = currentIndex >= 0 ? songs[currentIndex] : null;
+  const currentIndex = useMemo(() => playQueue.findIndex((s) => s.id === currentId), [playQueue, currentId]);
+  const currentSong = currentIndex >= 0 ? playQueue[currentIndex] : null;
+  const hasNext = currentIndex >= 0 && currentIndex < playQueue.length - 1;
 
   // Swap the <audio> source whenever a different song is selected, and try
   // to autoplay it — browsers allow this because it's the direct result of
@@ -61,8 +81,20 @@ export function FeedPlayer({ songs, autoPlaySongId }: { songs: FeedSong[]; autoP
     }
   }
 
+  function handleRestart() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = 0;
+    setCurrentTime(0);
+  }
+
+  function handleSkip() {
+    const next = playQueue[currentIndex + 1];
+    if (next) setCurrentId(next.id);
+  }
+
   function handleEnded() {
-    const next = songs[currentIndex + 1];
+    const next = playQueue[currentIndex + 1];
     if (next) {
       setCurrentId(next.id);
     } else {
@@ -93,12 +125,8 @@ export function FeedPlayer({ songs, autoPlaySongId }: { songs: FeedSong[]; autoP
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {songs.map((song) => {
           const isActive = song.id === currentId;
-          return (
-            <button
-              key={song.id}
-              onClick={() => handleSelect(song)}
-              className="group flex flex-col items-start text-left"
-            >
+          const tileContent = (
+            <>
               <div className="relative w-full overflow-hidden rounded-lg bg-[#3A4A32]">
                 {song.cover_url ? (
                   <Image
@@ -122,6 +150,20 @@ export function FeedPlayer({ songs, autoPlaySongId }: { songs: FeedSong[]; autoP
                 {song.title}
               </p>
               <p className="truncate text-xs text-[#B9B6A6]">{song.artist}</p>
+            </>
+          );
+
+          return linkToDetail ? (
+            <Link key={song.id} href={`/song/${song.id}`} className="group flex flex-col items-start text-left">
+              {tileContent}
+            </Link>
+          ) : (
+            <button
+              key={song.id}
+              onClick={() => handleSelect(song)}
+              className="group flex flex-col items-start text-left"
+            >
+              {tileContent}
             </button>
           );
         })}
@@ -144,13 +186,30 @@ export function FeedPlayer({ songs, autoPlaySongId }: { songs: FeedSong[]; autoP
                 {formatDuration(currentTime)} / {formatDuration(duration)}
               </p>
             </div>
-            <button
-              onClick={togglePlayPause}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#F3ECDD]"
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              <PlayPauseIcon playing={isPlaying} className="h-5 w-5" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                onClick={handleRestart}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-[#B9B6A6]"
+                aria-label="Restart"
+              >
+                <SkipIcon direction="back" className="h-4 w-4" />
+              </button>
+              <button
+                onClick={togglePlayPause}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#F3ECDD]"
+                aria-label={isPlaying ? "Pause" : "Play"}
+              >
+                <PlayPauseIcon playing={isPlaying} className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handleSkip}
+                disabled={!hasNext}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-[#B9B6A6] disabled:opacity-30"
+                aria-label="Skip"
+              >
+                <SkipIcon direction="forward" className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -170,6 +229,23 @@ function PlayPauseIcon({ playing, className }: { playing: boolean; className?: s
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
       <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+function SkipIcon({ direction, className }: { direction: "back" | "forward"; className?: string }) {
+  if (direction === "back") {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <rect x="5" y="5" width="2.2" height="14" rx="1" />
+        <path d="M18 5v14l-10-7z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M6 5v14l10-7z" />
+      <rect x="16.8" y="5" width="2.2" height="14" rx="1" />
     </svg>
   );
 }

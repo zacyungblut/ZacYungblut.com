@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { FeedPlayer } from "@/components/FeedPlayer";
-import { getSong } from "@/lib/supabase";
+import { getFeedSongs, getSong } from "@/lib/supabase";
 import { APPLE_MUSIC_URL, SPOTIFY_URL } from "@/lib/links";
 
 const FALLBACK_TITLE = "A song from Zac Yungblut";
@@ -44,7 +44,7 @@ export default async function SongPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const song = await getSong(id);
+  const [song, activeFeed] = await Promise.all([getSong(id), getFeedSongs()]);
 
   if (!song) {
     return (
@@ -55,6 +55,13 @@ export default async function SongPage({
   }
 
   const isReleased = Boolean(song.retired_at);
+  // This song plus whatever comes after it in the release queue — so
+  // skipping forward from a shared song link keeps going through the rest
+  // of the catalog, same as picking it up mid-browse would. Falls back to
+  // just this song alone if it's not part of the active queue (e.g. it's
+  // already released).
+  const feedIndex = activeFeed.findIndex((s) => s.id === song.id);
+  const queue = feedIndex === -1 ? [song] : activeFeed.slice(feedIndex);
 
   return (
     <main className="min-h-screen bg-[#11130F] pb-28">
@@ -64,7 +71,7 @@ export default async function SongPage({
         <p className="mt-2 text-sm text-[#B9B6A6]">{song.artist}</p>
 
         <div className="mx-auto mt-8 max-w-xs">
-          <FeedPlayer songs={[song]} autoPlaySongId={song.id} />
+          <FeedPlayer songs={[song]} queue={queue} autoPlaySongId={song.id} />
         </div>
 
         {isReleased ? (
