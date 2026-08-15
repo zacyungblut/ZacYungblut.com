@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CamoPlayPauseIcon, CamoSkipIcon } from "@/components/icons";
 import { usePlayer } from "@/lib/player-context";
+import { slugify } from "@/lib/slug";
 
 /** Persists across navigation so playback keeps going (and stays visible)
  * when the fan leaves the currently-playing song's own page — e.g. presses
@@ -15,13 +16,14 @@ export function MiniPlayer() {
   const { currentSong, isPlaying, currentTime, duration, hasNext, togglePlayPause, restart, skip } = usePlayer();
 
   if (!currentSong) return null;
-  if (pathname === `/song/${currentSong.id}`) return null;
+  const slug = slugify(currentSong.title);
+  if (pathname === `/song/${slug}`) return null;
 
   const progress = duration > 0 ? currentTime / duration : 0;
 
   return (
     <Link
-      href={`/song/${currentSong.id}`}
+      href={`/song/${slug}`}
       className="fixed inset-x-0 bottom-0 z-20 block border-t border-white/10 bg-[#191C15]/95 backdrop-blur"
     >
       <div className="h-1 w-full bg-white/10">

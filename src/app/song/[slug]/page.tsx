@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SongPlayer } from "@/components/SongPlayer";
-import { getFeedSongs, getSong } from "@/lib/supabase";
+import { getFeedSongs, getSongBySlug } from "@/lib/supabase";
 
 const FALLBACK_TITLE = "A song from Zac Yungblut";
 const FALLBACK_DESCRIPTION = "Someone shared a song with you from Zac Yungblut's Underground feed.";
@@ -12,10 +12,10 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  const song = await getSong(id);
+  const { slug } = await params;
+  const song = await getSongBySlug(slug);
 
   if (!song) {
     return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION };
@@ -40,10 +40,10 @@ export async function generateMetadata({
 export default async function SongPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
-  const [song, activeFeed] = await Promise.all([getSong(id), getFeedSongs()]);
+  const { slug } = await params;
+  const [song, activeFeed] = await Promise.all([getSongBySlug(slug), getFeedSongs()]);
 
   if (!song) {
     return (

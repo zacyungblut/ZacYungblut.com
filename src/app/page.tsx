@@ -29,7 +29,7 @@ export default async function Home() {
             </div>
             {songs.length > 0 ? <ShuffleButton songs={songs} /> : null}
           </div>
-          <p className="mt-3 text-sm leading-relaxed text-[#B9B6A6]">Some of Zac&apos;s unreleased songs</p>
+          {/* <p className="mt-3 text-sm leading-relaxed text-[#B9B6A6]">Some of Zac&apos;s unreleased songs</p> */}
         </div>
 
         {songs.length > 0 ? (

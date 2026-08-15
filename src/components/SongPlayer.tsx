@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CamoText } from "@/components/CamoText";
@@ -7,6 +8,7 @@ import { CamoPlayPauseIcon, CamoSkipIcon } from "@/components/icons";
 import { activeLyricIndex } from "@/lib/lyrics";
 import { APPLE_MUSIC_URL, SPOTIFY_URL } from "@/lib/links";
 import { usePlayer } from "@/lib/player-context";
+import { slugify } from "@/lib/slug";
 import type { FeedSong } from "@/lib/supabase";
 
 function formatDuration(seconds: number): string {
@@ -32,6 +34,7 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
   // what it was navigated to.
   const song = queue.find((s) => s.id === initialSongId) ?? queue[0];
   const isCurrent = currentSong?.id === song.id;
+  const [copied, setCopied] = useState(false);
 
   function handlePlayPause() {
     if (isCurrent) {
@@ -51,6 +54,22 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
     }
   }
 
+  async function handleShare() {
+    const url = `${window.location.origin}/song/${slugify(song.title)}`;
+    const shareData = { title: `"${song.title}" — Zac Yungblut`, text: `Check out "${song.title}" by ${song.artist}`, url };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        // Cancelled the share sheet — not an error.
+      }
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   function handleSeek(e: React.MouseEvent<HTMLDivElement>) {
     if (!isCurrent || duration <= 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -66,16 +85,31 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
 
   return (
     <div className="mx-auto max-w-md text-center">
-      <div className="mx-auto w-56 text-left sm:w-64">
+      <div className="mx-auto mb-4 flex w-56 items-center justify-between sm:w-64">
         <Link
           href="/"
           aria-label="Back to Feed"
-          className="-ml-2 mb-4 inline-flex h-9 w-9 items-center justify-center text-[#B9B6A6] transition-colors hover:text-[#F3ECDD]"
+          className="-ml-2 flex h-9 w-9 items-center justify-center text-[#B9B6A6] transition-colors hover:text-[#F3ECDD]"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </Link>
+        <button
+          onClick={handleShare}
+          aria-label="Share this song"
+          className="-mr-2 flex h-9 w-9 items-center justify-center text-[#B9B6A6] transition-colors hover:text-[#F3ECDD]"
+        >
+          {copied ? (
+            <span className="text-[10px] font-bold uppercase tracking-wide text-[#FF9100]">Copied</span>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+          )}
+        </button>
       </div>
 
       <button

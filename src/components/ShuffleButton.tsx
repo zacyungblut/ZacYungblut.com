@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { usePlayer } from "@/lib/player-context";
 import { shuffleArray } from "@/lib/shuffle";
+import { slugify } from "@/lib/slug";
 import type { FeedSong } from "@/lib/supabase";
 
 export function ShuffleButton({ songs }: { songs: FeedSong[] }) {
@@ -13,7 +14,7 @@ export function ShuffleButton({ songs }: { songs: FeedSong[] }) {
     if (songs.length === 0) return;
     const shuffled = shuffleArray(songs);
     playSong(shuffled, shuffled[0].id);
-    router.push(`/song/${shuffled[0].id}`);
+    router.push(`/song/${slugify(shuffled[0].title)}`);
   }
 
   return (

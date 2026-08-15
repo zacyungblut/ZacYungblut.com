@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { slugify } from "./slug";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
@@ -46,6 +47,15 @@ export async function getAllSongsForLookup(): Promise<FeedSong[]> {
     return [];
   }
   return data ?? [];
+}
+
+/** Resolves a URL slug (e.g. "big-sky") back to a song — computed from the
+ * title on the fly rather than stored, so it can't drift out of sync with a
+ * title edit. Also accepts a raw song id, so a link shared before slugs
+ * existed keeps working. */
+export async function getSongBySlug(slug: string): Promise<FeedSong | null> {
+  const songs = await getAllSongsForLookup();
+  return songs.find((s) => slugify(s.title) === slug || s.id === slug) ?? null;
 }
 
 /** The active (not-yet-released) catalog, in release-queue order — the
