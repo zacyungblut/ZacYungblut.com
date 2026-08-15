@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   description: "Listen to Zac Yungblut's unreleased songs. The most played gets released next.",
 };
 
+// The catalog changes over time (new songs added, songs retired once
+// released) — never serve a cached snapshot of it.
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const songs = await getFeedSongs();
 

@@ -6,6 +6,10 @@ import { APPLE_MUSIC_URL, SPOTIFY_URL } from "@/lib/links";
 const FALLBACK_TITLE = "A song from Zac Yungblut";
 const FALLBACK_DESCRIPTION = "Someone shared a song with you from Zac Yungblut's Underground feed.";
 
+// retired_at flips (and songs get added) over time — never serve a cached
+// snapshot of a song's page.
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {
