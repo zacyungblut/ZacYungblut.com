@@ -1,15 +1,44 @@
-import { Nav } from "@/components/Nav";
-import { Hero } from "@/components/Hero";
-import { Footer } from "@/components/Footer";
+import type { Metadata } from "next";
+import { FeedPlayer } from "@/components/FeedPlayer";
+import { getFeedSongs } from "@/lib/supabase";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "Zac Yungblut — Underground",
+  description: "Listen to Zac Yungblut's unreleased songs. The most played gets released next.",
+};
+
+export default async function Home() {
+  const songs = await getFeedSongs();
+
   return (
-    <>
-      <Nav />
-      <main className="flex flex-1 items-center justify-center">
-        <Hero />
-      </main>
-      <Footer />
-    </>
+    <main className="min-h-screen bg-[#11130F] pb-28">
+      <div className="mx-auto max-w-2xl px-5 pt-14">
+        <div className="mb-8">
+          <p className="text-xs font-bold tracking-[0.2em] text-[#FF9100]">UNDERGROUND</p>
+          <h1 className="font-display mt-1 text-4xl uppercase text-[#F3ECDD]">Zac Yungblut</h1>
+          <p className="mt-3 text-sm leading-relaxed text-[#B9B6A6]">
+            Unreleased songs, straight from the artist. Listen below — the most played gets released next.
+          </p>
+        </div>
+
+        {songs.length > 0 ? (
+          <FeedPlayer songs={songs} />
+        ) : (
+          <p className="text-sm text-[#82806F]">Nothing in the queue right now — check back soon.</p>
+        )}
+      </div>
+
+      <footer className="mx-auto mt-16 flex max-w-2xl items-center justify-center gap-5 px-5 text-xs text-[#82806F]">
+        <a href="/support" className="transition-colors hover:text-[#B9B6A6]">
+          Support
+        </a>
+        <a href="/privacy" className="transition-colors hover:text-[#B9B6A6]">
+          Privacy Policy
+        </a>
+        <a href="/app" className="transition-colors hover:text-[#B9B6A6]">
+          The App
+        </a>
+      </footer>
+    </main>
   );
 }

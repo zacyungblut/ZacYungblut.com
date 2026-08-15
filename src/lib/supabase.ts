@@ -12,20 +12,40 @@ export const supabase = createClient(
   supabaseAnonKey || "placeholder-anon-key"
 );
 
-export type SongPublic = {
+export type FeedSong = {
   id: string;
   title: string;
   artist: string;
   cover_url: string | null;
-  description: string | null;
+  audio_url: string;
+  duration_seconds: number | null;
+  track_number: number | null;
   retired_at: string | null;
   created_at: string;
 };
 
-/** Reads from `songs_public`, a view that deliberately excludes `audio_url`
- * and `lyrics` — shared song links get a real title/artist/cover for their
- * link preview without letting anyone listen outside the app. */
-export async function getPublicSong(id: string): Promise<SongPublic | null> {
-  const { data } = await supabase.from("songs_public").select("*").eq("id", id).maybeSingle();
+/** Reads from `songs_feed_public`, a view that (unlike `songs_public`)
+ * includes `audio_url` — this is what lets the website stream the catalog
+ * directly, no app install required. */
+export async function getSong(id: string): Promise<FeedSong | null> {
+  const { data } = await supabase.from("songs_feed_public").select("*").eq("id", id).maybeSingle();
   return data;
+}
+
+/** The active (not-yet-released) catalog, in release-queue order — the
+ * website's Feed. Retired songs are already out on Spotify/Apple, so they're
+ * left off this list the same way they're left off the app's Feed tab. */
+export async function getFeedSongs(): Promise<FeedSong[]> {
+  const { data, error } = await supabase
+    .from("songs_feed_public")
+    .select("*")
+    .is("retired_at", null)
+    .order("track_number", { ascending: true });
+  // Fails soft (empty feed) rather than 500ing the homepage — same reasoning
+  // as the placeholder client above.
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return data ?? [];
 }
