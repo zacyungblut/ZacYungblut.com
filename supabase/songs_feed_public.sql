@@ -9,8 +9,13 @@
 -- songs_public, this deliberately includes audio_url. Runs as the view
 -- owner, so it bypasses the authenticated-only policy on `songs` the same
 -- way songs_public does.
+--
+-- description/lyrics were added after the view's first release, appended at
+-- the end — `create or replace view` can't reorder or drop existing
+-- columns, only add trailing ones, so this stays a safe re-run.
 create or replace view public.songs_feed_public as
-  select id, title, artist, cover_url, audio_url, duration_seconds, track_number, retired_at, created_at
+  select id, title, artist, cover_url, audio_url, duration_seconds, track_number, retired_at, created_at,
+    description, lyrics
   from public.songs;
 
 grant select on public.songs_feed_public to anon, authenticated;

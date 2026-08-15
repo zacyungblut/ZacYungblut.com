@@ -12,6 +12,8 @@ export const supabase = createClient(
   supabaseAnonKey || "placeholder-anon-key"
 );
 
+export type LyricLine = { t: number; text: string };
+
 export type FeedSong = {
   id: string;
   title: string;
@@ -22,6 +24,8 @@ export type FeedSong = {
   track_number: number | null;
   retired_at: string | null;
   created_at: string;
+  description: string | null;
+  lyrics: LyricLine[] | null;
 };
 
 /** Reads from `songs_feed_public`, a view that (unlike `songs_public`)
