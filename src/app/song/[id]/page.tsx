@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SongPlayer } from "@/components/SongPlayer";
 import { getFeedSongs, getSong } from "@/lib/supabase";
 
@@ -62,7 +63,18 @@ export default async function SongPage({
   const queue = feedIndex === -1 ? [song] : activeFeed.slice(feedIndex);
 
   return (
-    <main className="min-h-screen bg-[#11130F] px-5 pb-20 pt-14">
+    <main className="min-h-screen bg-[#11130F] px-5 pb-20 pt-8">
+      <div className="mx-auto max-w-md">
+        <Link
+          href="/"
+          aria-label="Back to Feed"
+          className="-ml-2 mb-4 inline-flex h-9 w-9 items-center justify-center text-[#B9B6A6] transition-colors hover:text-[#F3ECDD]"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </Link>
+      </div>
       <SongPlayer queue={queue} initialSongId={song.id} />
     </main>
   );

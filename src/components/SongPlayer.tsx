@@ -127,6 +127,11 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
         ) : (
           <div className="aspect-square w-full" />
         )}
+        <div className="absolute right-2 top-2 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-sm">
+          <span className="text-[10px] font-bold tracking-widest text-[#FF9100]">
+            {isReleased ? "OUT NOW" : "UNRELEASED"}
+          </span>
+        </div>
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
           <PlayPauseIcon playing={isPlaying} className="h-12 w-12 text-[#F3ECDD]" />
         </div>
@@ -136,7 +141,6 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
         {song.title}
       </CamoText>
       <p className="mt-1 text-sm text-[#B9B6A6]">{song.artist}</p>
-      <p className="mt-2 text-xs font-bold tracking-[0.2em] text-[#FF9100]">{isReleased ? "OUT NOW" : "UNRELEASED"}</p>
 
       <div className="mx-auto mt-7 max-w-xs">
         <div onClick={handleSeek} className="h-1 cursor-pointer rounded-full bg-white/10">
@@ -155,7 +159,7 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
         <button
           onClick={togglePlayPause}
           aria-label={isPlaying ? "Pause" : "Play"}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F3ECDD] text-[#11130F]"
+          className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#F3ECDD] text-[#F3ECDD]"
         >
           <PlayPauseIcon playing={isPlaying} className="h-7 w-7" />
         </button>
@@ -183,9 +187,7 @@ export function SongPlayer({ queue, initialSongId }: { queue: FeedSong[]; initia
             </a>
           </div>
         </div>
-      ) : (
-        <p className="mt-8 text-xs text-[#82806F]">Vote with your plays — the most played song releases next.</p>
-      )}
+      ) : null}
 
       {song.lyrics && song.lyrics.length > 0 ? (
         <div className="mt-10 pb-4 text-left">
