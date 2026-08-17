@@ -31,6 +31,22 @@ export async function getAllWebPlays(): Promise<WebPlay[]> {
   return data ?? [];
 }
 
+/** All plays for one visitor, most recent first — the indexed `visitor_id`
+ * lookup, so unlike getAllWebPlays() this isn't capped or affected by the
+ * global 5000-row window. */
+export async function getWebPlaysForVisitor(visitorId: string): Promise<WebPlay[]> {
+  const { data, error } = await supabaseAdmin
+    .from("web_plays")
+    .select("*")
+    .eq("visitor_id", visitorId)
+    .order("started_at", { ascending: false });
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return data ?? [];
+}
+
 function completionPct(play: WebPlay): number | null {
   if (!play.song_duration_seconds || play.song_duration_seconds <= 0) return null;
   return Math.min(1, play.listened_seconds / play.song_duration_seconds) * 100;
@@ -121,6 +137,32 @@ export function aggregateByVisitor(plays: WebPlay[], songs: Map<string, FeedSong
       };
     })
     .sort((a, b) => b.plays - a.plays);
+}
+
+export type VisitorSummary = {
+  plays: number;
+  totalListenedSeconds: number;
+  avgCompletionPct: number | null;
+  firstSeen: string;
+  lastSeen: string;
+  countries: string[];
+  devices: string[];
+};
+
+/** Summarizes a single visitor's plays (as returned by getWebPlaysForVisitor)
+ * for the visitor detail page. Assumes a non-empty, single-visitor array. */
+export function summarizeVisitor(plays: WebPlay[]): VisitorSummary {
+  const completions = plays.map(completionPct).filter((p): p is number => p !== null);
+  const startedAts = plays.map((p) => p.started_at);
+  return {
+    plays: plays.length,
+    totalListenedSeconds: plays.reduce((sum, p) => sum + p.listened_seconds, 0),
+    avgCompletionPct: completions.length > 0 ? completions.reduce((a, b) => a + b, 0) / completions.length : null,
+    firstSeen: startedAts.reduce((a, b) => (b < a ? b : a)),
+    lastSeen: startedAts.reduce((a, b) => (b > a ? b : a)),
+    countries: [...new Set(plays.map((p) => p.country).filter((c): c is string => Boolean(c)))],
+    devices: [...new Set(plays.map((p) => parseUserAgent(p.user_agent)))],
+  };
 }
 
 export type LocationStats = { location: string; plays: number; uniqueVisitors: number };

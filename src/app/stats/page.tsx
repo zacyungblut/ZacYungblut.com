@@ -1,43 +1,17 @@
-import { cookies } from "next/headers";
+import Link from "next/link";
 import { getAllSongsForLookup } from "@/lib/supabase";
 import { aggregateByLocation, aggregateByReferrer, aggregateBySong, aggregateByVisitor, getAllWebPlays, parseUserAgent } from "@/lib/stats";
+import { isStatsAuthed } from "@/lib/stats-auth";
+import { formatClock, formatDurationLong, formatDate } from "@/lib/stats-format";
 import { authenticate, signOut } from "./actions";
+import { th, td, tdMuted, StatCard, Section } from "./ui";
 
 export const dynamic = "force-dynamic";
-
-function formatClock(seconds: number): string {
-  const s = Math.round(seconds);
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${m}:${sec.toString().padStart(2, "0")}`;
-}
-
-function formatDurationLong(seconds: number): string {
-  const s = Math.round(seconds);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-const th = "px-3 py-2 text-left text-xs font-bold uppercase tracking-wide text-[#82806F]";
-const td = "px-3 py-2 text-sm text-[#F3ECDD] whitespace-nowrap";
-const tdMuted = "px-3 py-2 text-sm text-[#B9B6A6] whitespace-nowrap";
 
 export default async function StatsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   const expected = process.env.STATS_PASSWORD;
-  const cookieStore = await cookies();
-  const isAuthed = Boolean(expected) && cookieStore.get("stats_auth")?.value === expected;
+  const isAuthed = await isStatsAuthed();
 
   if (!isAuthed) {
     return (
@@ -195,7 +169,11 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                   <tbody className="divide-y divide-white/5">
                     {byVisitor.map((v) => (
                       <tr key={v.visitorId}>
-                        <td className={`${td} font-mono text-xs`}>{v.visitorId.slice(0, 8)}</td>
+                        <td className={`${td} font-mono text-xs`}>
+                          <Link href={`/stats/visitor/${v.visitorId}`} className="text-[#FF9100] hover:underline">
+                            {v.visitorId.slice(0, 8)}
+                          </Link>
+                        </td>
                         <td className={tdMuted}>{v.plays}</td>
                         <td className={tdMuted}>{formatDurationLong(v.totalListenedSeconds)}</td>
                         <td className={tdMuted}>{v.topSongTitle}</td>
@@ -240,7 +218,11 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                         <tr key={p.id}>
                           <td className={tdMuted}>{formatDate(p.started_at)}</td>
                           <td className={td}>{songMap.get(p.song_id)?.title ?? "Unknown song"}</td>
-                          <td className={`${tdMuted} font-mono text-xs`}>{p.visitor_id.slice(0, 8)}</td>
+                          <td className={`${tdMuted} font-mono text-xs`}>
+                            <Link href={`/stats/visitor/${p.visitor_id}`} className="text-[#FF9100] hover:underline">
+                              {p.visitor_id.slice(0, 8)}
+                            </Link>
+                          </td>
                           <td className={tdMuted}>{formatClock(p.listened_seconds)}</td>
                           <td className={tdMuted}>{pct !== null ? `${Math.round(pct)}%` : "—"}</td>
                           <td className={tdMuted}>{location}</td>
@@ -257,23 +239,5 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
         )}
       </div>
     </main>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-      <p className="text-xs font-bold uppercase tracking-wide text-[#82806F]">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-[#F3ECDD]">{value}</p>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-10">
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#FF9100]">{title}</h2>
-      {children}
-    </div>
   );
 }
