@@ -2,7 +2,8 @@ import Link from "next/link";
 import { getAllSongsForLookup } from "@/lib/supabase";
 import { aggregateByLocation, aggregateByReferrer, aggregateBySong, aggregateByVisitor, getAllWebPlays, parseUserAgent } from "@/lib/stats";
 import { isStatsAuthed } from "@/lib/stats-auth";
-import { formatClock, formatDurationLong, formatDate } from "@/lib/stats-format";
+import { formatClock, formatCompact, formatDurationLong, formatDate } from "@/lib/stats-format";
+import { aggregateByFanAccount, getApprovedFanAccounts, getFanPostsForAccounts, topFanPosts, weeklyFanViews } from "@/lib/fan-accounts";
 import { authenticate, signOut } from "./actions";
 import { th, td, tdMuted, StatCard, Section } from "./ui";
 
@@ -37,8 +38,14 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
     );
   }
 
-  const [plays, songs] = await Promise.all([getAllWebPlays(), getAllSongsForLookup()]);
+  const [plays, songs, fanAccounts] = await Promise.all([getAllWebPlays(), getAllSongsForLookup(), getApprovedFanAccounts()]);
+  const fanPosts = await getFanPostsForAccounts(fanAccounts.map((a) => a.id));
   const songMap = new Map(songs.map((s) => [s.id, s]));
+
+  const fanAccountStats = aggregateByFanAccount(fanAccounts, fanPosts);
+  const fanTotalViews = fanPosts.reduce((sum, p) => sum + p.view_count, 0);
+  const fanWeeklyViews = weeklyFanViews(fanPosts);
+  const topPosts = topFanPosts(fanAccounts, fanPosts, 20);
 
   const bySong = aggregateBySong(plays, songMap);
   const byVisitor = aggregateByVisitor(plays, songMap);
@@ -237,6 +244,99 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
             </Section>
           </>
         )}
+
+        <div className="mt-14">
+          <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#FF9100]">Fan portal</h2>
+          {fanAccounts.length === 0 ? (
+            <p className="text-sm text-[#82806F]">No approved fan accounts yet.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatCard label="Approved fan accounts" value={fanAccounts.length.toLocaleString()} />
+                <StatCard label="Total posts" value={fanPosts.length.toLocaleString()} />
+                <StatCard label="Total views" value={formatCompact(fanTotalViews)} />
+                <StatCard label="Views this week" value={formatCompact(fanWeeklyViews)} />
+              </div>
+
+              <div className="mt-6">
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#82806F]">By account</h3>
+                <div className="overflow-x-auto rounded-lg border border-white/10">
+                  <table className="w-full min-w-[720px] border-collapse">
+                    <thead className="bg-white/5">
+                      <tr>
+                        <th className={th}>Platform</th>
+                        <th className={th}>Handle</th>
+                        <th className={th}>Posts</th>
+                        <th className={th}>Total views</th>
+                        <th className={th}>Total likes</th>
+                        <th className={th}>Total comments</th>
+                        <th className={th}>Avg. views/post</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {fanAccountStats.map((a) => (
+                        <tr key={a.accountId}>
+                          <td className={td}>{a.platform === "tiktok" ? "TikTok" : "Instagram"}</td>
+                          <td className={td}>
+                            {a.displayName ? `${a.displayName} ` : ""}
+                            <span className="text-[#82806F]">@{a.username}</span>
+                          </td>
+                          <td className={tdMuted}>{a.posts}</td>
+                          <td className={tdMuted}>{formatCompact(a.totalViews)}</td>
+                          <td className={tdMuted}>{formatCompact(a.totalLikes)}</td>
+                          <td className={tdMuted}>{formatCompact(a.totalComments)}</td>
+                          <td className={tdMuted}>{formatCompact(Math.round(a.avgViewsPerPost))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {topPosts.length > 0 ? (
+                <div className="mt-6">
+                  <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#82806F]">Top posts</h3>
+                  <div className="overflow-x-auto rounded-lg border border-white/10">
+                    <table className="w-full min-w-[760px] border-collapse">
+                      <thead className="bg-white/5">
+                        <tr>
+                          <th className={th}>Platform</th>
+                          <th className={th}>Handle</th>
+                          <th className={th}>Caption</th>
+                          <th className={th}>Views</th>
+                          <th className={th}>Likes</th>
+                          <th className={th}>Comments</th>
+                          <th className={th}>Posted</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {topPosts.map((p) => (
+                          <tr key={p.id}>
+                            <td className={td}>{p.platform === "tiktok" ? "TikTok" : "Instagram"}</td>
+                            <td className={td}>@{p.username}</td>
+                            <td className={`${tdMuted} max-w-[280px] overflow-hidden text-ellipsis`} title={p.caption ?? undefined}>
+                              {p.permalink ? (
+                                <a href={p.permalink} target="_blank" rel="noreferrer" className="text-[#FF9100] hover:underline">
+                                  {p.caption || "View post"}
+                                </a>
+                              ) : (
+                                p.caption || "—"
+                              )}
+                            </td>
+                            <td className={tdMuted}>{formatCompact(p.view_count)}</td>
+                            <td className={tdMuted}>{formatCompact(p.like_count)}</td>
+                            <td className={tdMuted}>{formatCompact(p.comment_count)}</td>
+                            <td className={tdMuted}>{p.posted_at ? formatDate(p.posted_at) : "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
+            </>
+          )}
+        </div>
       </div>
     </main>
   );
