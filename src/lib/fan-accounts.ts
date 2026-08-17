@@ -47,6 +47,38 @@ export async function getFanPostsForAccounts(accountIds: string[]): Promise<FanP
   return data ?? [];
 }
 
+function nyCalendarKey(date: Date): number {
+  const [y, m, d] = date.toLocaleDateString("en-CA", { timeZone: "America/New_York" }).split("-").map(Number);
+  return y * 10000 + m * 100 + d;
+}
+
+function nyWeekdayNumber(date: Date): number {
+  const map: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
+  return map[date.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "short" })];
+}
+
+/** Shifts a YYYYMMDD calendar key by whole days. Only ever compares/shifts
+ * calendar dates, never clock instants, so it's DST-safe without any
+ * UTC-offset math. */
+function shiftCalendarKey(key: number, days: number): number {
+  const y = Math.floor(key / 10000);
+  const m = Math.floor((key % 10000) / 100) - 1;
+  const d = key % 100;
+  const shifted = new Date(Date.UTC(y, m, d + days));
+  return shifted.getUTCFullYear() * 10000 + (shifted.getUTCMonth() + 1) * 100 + shifted.getUTCDate();
+}
+
+/** Whether an ISO timestamp falls in the current Mon-Sun calendar week,
+ * evaluated in US Eastern time (the site's display timezone). */
+function isThisEasternWeek(iso: string | null, now: Date): boolean {
+  if (!iso) return false;
+  const todayKey = nyCalendarKey(now);
+  const mondayKey = shiftCalendarKey(todayKey, -(nyWeekdayNumber(now) - 1));
+  const sundayKey = shiftCalendarKey(mondayKey, 6);
+  const postKey = nyCalendarKey(new Date(iso));
+  return postKey >= mondayKey && postKey <= sundayKey;
+}
+
 export type FanAccountStats = {
   accountId: string;
   platform: FanPlatform;
@@ -57,24 +89,27 @@ export type FanAccountStats = {
   totalLikes: number;
   totalComments: number;
   avgViewsPerPost: number;
+  weeklyViews: number;
 };
 
 export function aggregateByFanAccount(accounts: FanAccount[], posts: FanPost[]): FanAccountStats[] {
-  const map = new Map<string, { posts: number; views: number; likes: number; comments: number }>();
+  const now = new Date();
+  const map = new Map<string, { posts: number; views: number; likes: number; comments: number; weeklyViews: number }>();
   for (const p of posts) {
     let entry = map.get(p.fan_account_id);
     if (!entry) {
-      entry = { posts: 0, views: 0, likes: 0, comments: 0 };
+      entry = { posts: 0, views: 0, likes: 0, comments: 0, weeklyViews: 0 };
       map.set(p.fan_account_id, entry);
     }
     entry.posts += 1;
     entry.views += p.view_count;
     entry.likes += p.like_count;
     entry.comments += p.comment_count;
+    if (isThisEasternWeek(p.posted_at, now)) entry.weeklyViews += p.view_count;
   }
   return accounts
     .map((a) => {
-      const e = map.get(a.id) ?? { posts: 0, views: 0, likes: 0, comments: 0 };
+      const e = map.get(a.id) ?? { posts: 0, views: 0, likes: 0, comments: 0, weeklyViews: 0 };
       return {
         accountId: a.id,
         platform: a.platform,
@@ -85,17 +120,40 @@ export function aggregateByFanAccount(accounts: FanAccount[], posts: FanPost[]):
         totalLikes: e.likes,
         totalComments: e.comments,
         avgViewsPerPost: e.posts > 0 ? e.views / e.posts : 0,
+        weeklyViews: e.weeklyViews,
       };
     })
     .sort((a, b) => b.totalViews - a.totalViews);
 }
 
-/** Sum of view_count across posts published in the last 7 days. Posts are
- * counted once at scrape time (view_count is a snapshot, not a delta), so
- * this is "views on recent posts," not a true week-over-week growth figure. */
-export function weeklyFanViews(posts: FanPost[]): number {
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  return posts.filter((p) => p.posted_at && new Date(p.posted_at).getTime() >= weekAgo).reduce((sum, p) => sum + p.view_count, 0);
+export type FanRefreshResult = { id: string; username: string; ok: boolean; postsSynced?: number; error?: string };
+
+/** Rescrapes every approved fan account's TikTok/Instagram post stats — the
+ * same scrape-fan-accounts Edge Function the app's admin "Refresh all"
+ * button calls. The artist signs into the app via Google OAuth (no
+ * password), so this site can't authenticate as a real user session like
+ * the app does — instead it proves itself with a shared secret the Edge
+ * Function checks before falling back to its normal user-session check. */
+export async function refreshFanAccounts(): Promise<FanRefreshResult[]> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  const refreshSecret = process.env.FAN_REFRESH_SECRET;
+  if (!supabaseUrl || !supabaseAnonKey) throw new Error("SUPABASE_URL / SUPABASE_ANON_KEY are not set on the server.");
+  if (!refreshSecret) throw new Error("FAN_REFRESH_SECRET is not set on the server.");
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/scrape-fan-accounts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${supabaseAnonKey}`,
+      apikey: supabaseAnonKey,
+      "x-refresh-secret": refreshSecret,
+    },
+    body: JSON.stringify({}),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error ?? `scrape-fan-accounts returned ${res.status}`);
+  return (json?.results ?? []) as FanRefreshResult[];
 }
 
 export type TopFanPost = FanPost & { platform: FanPlatform; username: string; displayName: string | null };
