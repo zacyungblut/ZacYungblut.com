@@ -14,10 +14,12 @@ export function formatDurationLong(seconds: number): string {
 }
 
 export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
+  const formatted = new Date(iso).toLocaleString("en-US", {
+    timeZone: "America/New_York",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
   });
+  return `${formatted.toLowerCase()} est`;
 }
