@@ -46,6 +46,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
   const fanAccountStats = aggregateByFanAccount(fanAccounts, fanPosts);
   const fanTotalViews = fanPosts.reduce((sum, p) => sum + p.view_count, 0);
   const fanWeeklyViews = fanAccountStats.reduce((sum, a) => sum + a.weeklyViews, 0);
+  const fanViews24h = fanAccountStats.reduce((sum, a) => sum + a.views24h, 0);
   const topPosts = topFanPosts(fanAccounts, fanPosts, 20);
 
   const bySong = aggregateBySong(plays, songMap);
@@ -255,22 +256,24 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
             <p className="text-sm text-[#82806F]">No approved fan accounts yet.</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                 <StatCard label="Approved fan accounts" value={fanAccounts.length.toLocaleString()} />
                 <StatCard label="Total posts" value={fanPosts.length.toLocaleString()} />
                 <StatCard label="Total views" value={formatCompact(fanTotalViews)} />
+                <StatCard label="Views (24h)" value={formatCompact(fanViews24h)} />
                 <StatCard label="Views this week (Mon-Sun)" value={formatCompact(fanWeeklyViews)} />
               </div>
 
               <div className="mt-6">
                 <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#82806F]">By account</h3>
                 <div className="overflow-x-auto rounded-lg border border-white/10">
-                  <table className="w-full min-w-[820px] border-collapse">
+                  <table className="w-full min-w-[920px] border-collapse">
                     <thead className="bg-white/5">
                       <tr>
                         <th className={th}>Platform</th>
                         <th className={th}>Handle</th>
                         <th className={th}>Posts</th>
+                        <th className={th}>Views (24h)</th>
                         <th className={th}>Views this wk (mon-sun)</th>
                         <th className={th}>Total views</th>
                         <th className={th}>Total likes</th>
@@ -287,6 +290,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                             <span className="text-[#82806F]">@{a.username}</span>
                           </td>
                           <td className={tdMuted}>{a.posts}</td>
+                          <td className={tdMuted}>{formatCompact(a.views24h)}</td>
                           <td className={tdMuted}>{formatCompact(a.weeklyViews)}</td>
                           <td className={tdMuted}>{formatCompact(a.totalViews)}</td>
                           <td className={tdMuted}>{formatCompact(a.totalLikes)}</td>

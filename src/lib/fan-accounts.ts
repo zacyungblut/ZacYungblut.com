@@ -90,15 +90,17 @@ export type FanAccountStats = {
   totalComments: number;
   avgViewsPerPost: number;
   weeklyViews: number;
+  views24h: number;
 };
 
 export function aggregateByFanAccount(accounts: FanAccount[], posts: FanPost[]): FanAccountStats[] {
   const now = new Date();
-  const map = new Map<string, { posts: number; views: number; likes: number; comments: number; weeklyViews: number }>();
+  const dayAgo = now.getTime() - 24 * 60 * 60 * 1000;
+  const map = new Map<string, { posts: number; views: number; likes: number; comments: number; weeklyViews: number; views24h: number }>();
   for (const p of posts) {
     let entry = map.get(p.fan_account_id);
     if (!entry) {
-      entry = { posts: 0, views: 0, likes: 0, comments: 0, weeklyViews: 0 };
+      entry = { posts: 0, views: 0, likes: 0, comments: 0, weeklyViews: 0, views24h: 0 };
       map.set(p.fan_account_id, entry);
     }
     entry.posts += 1;
@@ -106,10 +108,11 @@ export function aggregateByFanAccount(accounts: FanAccount[], posts: FanPost[]):
     entry.likes += p.like_count;
     entry.comments += p.comment_count;
     if (isThisEasternWeek(p.posted_at, now)) entry.weeklyViews += p.view_count;
+    if (p.posted_at && new Date(p.posted_at).getTime() >= dayAgo) entry.views24h += p.view_count;
   }
   return accounts
     .map((a) => {
-      const e = map.get(a.id) ?? { posts: 0, views: 0, likes: 0, comments: 0, weeklyViews: 0 };
+      const e = map.get(a.id) ?? { posts: 0, views: 0, likes: 0, comments: 0, weeklyViews: 0, views24h: 0 };
       return {
         accountId: a.id,
         platform: a.platform,
@@ -121,6 +124,7 @@ export function aggregateByFanAccount(accounts: FanAccount[], posts: FanPost[]):
         totalComments: e.comments,
         avgViewsPerPost: e.posts > 0 ? e.views / e.posts : 0,
         weeklyViews: e.weeklyViews,
+        views24h: e.views24h,
       };
     })
     .sort((a, b) => b.totalViews - a.totalViews);
