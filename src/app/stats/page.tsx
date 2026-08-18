@@ -3,10 +3,11 @@ import { getAllSongsForLookup } from "@/lib/supabase";
 import { aggregateByLocation, aggregateByReferrer, aggregateBySong, aggregateByVisitor, getAllWebPlays, parseUserAgent } from "@/lib/stats";
 import { isStatsAuthed } from "@/lib/stats-auth";
 import { formatClock, formatCompact, formatDurationLong, formatDate } from "@/lib/stats-format";
-import { aggregateByFanAccount, getApprovedFanAccounts, getFanPostsForAccounts, topFanPosts } from "@/lib/fan-accounts";
+import { aggregateByFanAccount, dailyFanMetrics, getApprovedFanAccounts, getFanPostsForAccounts, topFanPosts } from "@/lib/fan-accounts";
 import { authenticate, signOut } from "./actions";
 import { th, td, tdMuted, StatCard, Section } from "./ui";
 import { RefreshFanButton } from "./RefreshFanButton";
+import { FanDailyChart } from "./FanDailyChart";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
   const fanWeeklyViews = fanAccountStats.reduce((sum, a) => sum + a.weeklyViews, 0);
   const fanViews24h = fanAccountStats.reduce((sum, a) => sum + a.views24h, 0);
   const topPosts = topFanPosts(fanAccounts, fanPosts, 20);
+  const dailyMetrics = dailyFanMetrics(fanPosts, 14);
 
   const bySong = aggregateBySong(plays, songMap);
   const byVisitor = aggregateByVisitor(plays, songMap);
@@ -262,6 +264,11 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                 <StatCard label="Total views" value={formatCompact(fanTotalViews)} />
                 <StatCard label="Views (24h)" value={formatCompact(fanViews24h)} />
                 <StatCard label="Views this week (Mon-Sun)" value={formatCompact(fanWeeklyViews)} />
+              </div>
+
+              <div className="mt-6">
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#82806F]">Daily activity (last 14 days)</h3>
+                <FanDailyChart data={dailyMetrics} />
               </div>
 
               <div className="mt-6">
