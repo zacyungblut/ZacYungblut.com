@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/refresh-fan-stats",
+      "schedule": "0 5 * * *"
+    }
+  ]
+}
