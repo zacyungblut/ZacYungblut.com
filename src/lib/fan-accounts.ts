@@ -86,23 +86,25 @@ function calendarKeyToLabel(key: number): string {
   return new Date(Date.UTC(y, m, d)).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-export type DailyFanMetrics = { date: string; views: number; likes: number; comments: number };
+export type DailyFanMetrics = { date: string; posts: number; views: number; likes: number; comments: number };
 
 /** Buckets posts by the Eastern calendar day they were posted, summing
- * view/like/comment counts — "how much has content posted on this day
- * accumulated," not a true daily view-velocity series (fan_posts stores one
- * current snapshot per post, not a running history). Returns exactly `days`
- * entries ending today, zero-filled where nothing was posted. */
+ * view/like/comment counts and counting posts — "how much has content
+ * posted on this day accumulated," not a true daily view-velocity series
+ * (fan_posts stores one current snapshot per post, not a running history).
+ * Returns exactly `days` entries ending today, zero-filled where nothing
+ * was posted. */
 export function dailyFanMetrics(posts: FanPost[], days: number): DailyFanMetrics[] {
   const todayKey = nyCalendarKey(new Date());
-  const buckets = new Map<number, { views: number; likes: number; comments: number }>();
+  const buckets = new Map<number, { posts: number; views: number; likes: number; comments: number }>();
   for (let i = days - 1; i >= 0; i--) {
-    buckets.set(shiftCalendarKey(todayKey, -i), { views: 0, likes: 0, comments: 0 });
+    buckets.set(shiftCalendarKey(todayKey, -i), { posts: 0, views: 0, likes: 0, comments: 0 });
   }
   for (const p of posts) {
     if (!p.posted_at) continue;
     const bucket = buckets.get(nyCalendarKey(new Date(p.posted_at)));
     if (!bucket) continue;
+    bucket.posts += 1;
     bucket.views += p.view_count;
     bucket.likes += p.like_count;
     bucket.comments += p.comment_count;

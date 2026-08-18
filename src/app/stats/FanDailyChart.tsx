@@ -28,6 +28,7 @@ export function FanDailyChart({ data }: { data: DailyFanMetrics[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const maxViews = Math.max(1, ...data.map((d) => d.views));
+  const totalPosts = data.reduce((sum, d) => sum + d.posts, 0);
   const totalViews = data.reduce((sum, d) => sum + d.views, 0);
   const totalLikes = data.reduce((sum, d) => sum + d.likes, 0);
   const totalComments = data.reduce((sum, d) => sum + d.comments, 0);
@@ -41,13 +42,13 @@ export function FanDailyChart({ data }: { data: DailyFanMetrics[] }) {
           <p className="text-xs font-bold uppercase tracking-wide text-[#82806F]">Views per day</p>
           {active ? (
             <p className="text-xs text-[#B9B6A6]">
-              <span className="font-bold text-[#F3ECDD]">{active.date}</span> — {formatCompact(active.views)} views ·{" "}
-              {formatCompact(active.likes)} likes · {formatCompact(active.comments)} comments
+              <span className="font-bold text-[#F3ECDD]">{active.date}</span> — {active.posts} post{active.posts === 1 ? "" : "s"} ·{" "}
+              {formatCompact(active.views)} views · {formatCompact(active.likes)} likes · {formatCompact(active.comments)} comments
             </p>
           ) : (
             <p className="text-xs text-[#B9B6A6]">
-              {data.length}-day totals — <span className="font-bold text-[#F3ECDD]">{formatCompact(totalViews)}</span> views ·{" "}
-              {formatCompact(totalLikes)} likes · {formatCompact(totalComments)} comments
+              {data.length}-day totals — <span className="font-bold text-[#F3ECDD]">{totalPosts}</span> posts ·{" "}
+              {formatCompact(totalViews)} views · {formatCompact(totalLikes)} likes · {formatCompact(totalComments)} comments
             </p>
           )}
         </div>
@@ -61,7 +62,7 @@ export function FanDailyChart({ data }: { data: DailyFanMetrics[] }) {
               onFocus={() => setActiveIndex(i)}
               onMouseLeave={() => setActiveIndex(null)}
               onBlur={() => setActiveIndex(null)}
-              aria-label={`${d.date}: ${d.views} views, ${d.likes} likes, ${d.comments} comments`}
+              aria-label={`${d.date}: ${d.posts} posts, ${d.views} views, ${d.likes} likes, ${d.comments} comments`}
               className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-1 rounded-sm outline-none"
               style={{ height: CHART_HEIGHT }}
             >
@@ -81,7 +82,8 @@ export function FanDailyChart({ data }: { data: DailyFanMetrics[] }) {
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <Sparkline label="Posts per day" data={data} accessor={(d) => d.posts} />
         <Sparkline label="Likes per day" data={data} accessor={(d) => d.likes} />
         <Sparkline label="Comments per day" data={data} accessor={(d) => d.comments} />
       </div>
@@ -91,10 +93,11 @@ export function FanDailyChart({ data }: { data: DailyFanMetrics[] }) {
           View as table
         </summary>
         <div className="mt-2 overflow-x-auto rounded-lg border border-white/10">
-          <table className="w-full min-w-[420px] border-collapse">
+          <table className="w-full min-w-[480px] border-collapse">
             <thead className="bg-white/5">
               <tr>
                 <th className={th}>Date</th>
+                <th className={th}>Posts</th>
                 <th className={th}>Views</th>
                 <th className={th}>Likes</th>
                 <th className={th}>Comments</th>
@@ -104,6 +107,7 @@ export function FanDailyChart({ data }: { data: DailyFanMetrics[] }) {
               {[...data].reverse().map((d) => (
                 <tr key={d.date}>
                   <td className={td}>{d.date}</td>
+                  <td className={tdMuted}>{d.posts.toLocaleString()}</td>
                   <td className={tdMuted}>{d.views.toLocaleString()}</td>
                   <td className={tdMuted}>{d.likes.toLocaleString()}</td>
                   <td className={tdMuted}>{d.comments.toLocaleString()}</td>
