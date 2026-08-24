@@ -15,6 +15,8 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const songs = await getFeedSongs();
+  const featured = songs.filter((s) => s.featured);
+  const rest = songs.filter((s) => !s.featured);
 
   return (
     <main className="min-h-screen bg-[#11130F] pb-28">
@@ -33,7 +35,20 @@ export default async function Home() {
         </div>
 
         {songs.length > 0 ? (
-          <SongGrid songs={songs} />
+          featured.length > 0 ? (
+            <>
+              <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[#FF9100]">Featured</h2>
+              <SongGrid songs={featured} />
+              {rest.length > 0 ? (
+                <>
+                  <h2 className="mb-3 mt-10 text-xs font-bold uppercase tracking-wide text-[#82806F]">All songs</h2>
+                  <SongGrid songs={rest} />
+                </>
+              ) : null}
+            </>
+          ) : (
+            <SongGrid songs={songs} />
+          )
         ) : (
           <p className="text-sm text-[#82806F]">Nothing in the queue right now — check back soon.</p>
         )}

@@ -27,6 +27,7 @@ export type FeedSong = {
   created_at: string;
   description: string | null;
   lyrics: LyricLine[] | null;
+  featured: boolean;
 };
 
 /** Reads from `songs_feed_public`, a view that (unlike `songs_public`)
