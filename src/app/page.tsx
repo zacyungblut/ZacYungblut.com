@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 // The catalog changes over time (new songs added, songs retired once
-// released) — never serve a cached snapshot of it.
+// released). never serve a cached snapshot of it.
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
