@@ -61,9 +61,6 @@ export default async function Home() {
         <a href="/privacy" className="transition-colors hover:text-[#B9B6A6]">
           Privacy Policy
         </a>
-        {/* <a href="/app" className="transition-colors hover:text-[#B9B6A6]">
-          Tsdf yup sdf ssdfdf sfsfsdfz
-        </a> */}
       </footer>
     </main>
   );
